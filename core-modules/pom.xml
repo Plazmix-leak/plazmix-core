@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <packaging>pom</packaging>
+
+    <groupId>net.plazmix.core</groupId>
+    <artifactId>core-modules</artifactId>
+    <version>1.0.0</version>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <target>1.8</target>
+                    <source>1.8</source>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.0.2</version>
+                <configuration>
+                    <outputDirectory>${CI_PROJECT_DIR}/modules-build</outputDirectory>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.16</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>net.plazmix</groupId>
+            <artifactId>plazmix-core</artifactId>
+            <version>1.0.1</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <modules>
+        <module>plazmix-auth</module>
+        <module>plazmix-chat</module>
+        <module>plazmix-reports</module>
+        <module>plazmix-commands</module>
+        <module>plazmix-economy</module>
+        <module>plazmix-punishment</module>
+        <module>plazmix-friends</module>
+        <module>plazmix-myserver</module>
+        <module>plazmix-metrics</module>
+        <module>plazmix-joiner</module>
+        <module>plazmix-party</module>
+        <module>plazmix-vkbot</module>
+        <module>plazmix-rewards</module>
+        <module>plazmix-streams</module>
+        <module>plazmix-gameselector</module>
+        <module>plazmix-guilds</module>
+        <module>plazmix-quiter</module>
+        <module>plazmix-ask</module>
+    </modules>
+</project>

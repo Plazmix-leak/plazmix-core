@@ -1,0 +1,83 @@
+image: maven:3.3.9-jdk-8
+
+stages:
+  - protocol
+  - core
+  - coreconnector
+
+variables:
+  DOCKER_DRIVER: overlay2
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository -XX:+TieredCompilation -XX:TieredStopAtLevel=1"
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+  - ${CI_PROJECT_DIR}/.m2/repository
+  
+before_script:
+  - which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y && apt-get install build-essential)
+  - eval $(ssh-agent -s)
+  - echo "$ARCHANGEL_SSH_PRIVATE_KEY" | ssh-add -
+  - mkdir -p ~/.ssh
+  - chmod 700 ~/.ssh
+  - ssh-keyscan -p $ARCHANGEL_PORT $ARCHANGEL_HOST >> ~/.ssh/known_hosts
+  - chmod 644 ~/.ssh/known_hosts
+
+
+protocol:
+  timeout: 2m
+  retry: 2
+  stage: protocol
+  only:
+    - main
+  script:
+    - 'mvn clean compile'
+    - 'cd core-protocol'
+    - 'mvn deploy -T 2C -am -Dmaven.test.skip -s $CI_PROJECT_DIR/ci_settings.xml'
+
+core:
+  timeout: 3m
+  retry: 2
+  stage: core
+  needs:
+    - "protocol"
+  only:
+    - main
+  script:
+    - 'echo "I turn off the service on the production server to avoid errors"'
+    - 'ssh $ARCHANGEL_USER@$ARCHANGEL_HOST -p $ARCHANGEL_PORT ./core/gitlabcorestop.sh'
+    - 'echo  "Success.."'
+    - 'mvn install -T 2C -am -Dmaven.test.skip -s $CI_PROJECT_DIR/ci_settings.xml'
+    - 'scp -P $ARCHANGEL_PORT target/plazmix-core.jar $ARCHANGEL_USER@$ARCHANGEL_HOST:~/core/'
+
+  
+modules:
+  timeout: 2m 30s
+  retry: 2
+  stage: core
+  needs:
+    - "core"
+  only:
+    - main
+  script:
+    - 'cd core-modules'
+    - 'mvn package -T 2C -am -o -Dmaven.test.skip -s $CI_PROJECT_DIR/ci_settings.xml'
+    - 'scp -r -P $ARCHANGEL_PORT $CI_PROJECT_DIR/modules-build/* $ARCHANGEL_USER@$ARCHANGEL_HOST:~/core/modules/'
+    - 'echo "I run the kernel on the production server..."'
+    - 'ssh $ARCHANGEL_USER@$ARCHANGEL_HOST -p $ARCHANGEL_PORT ./core/startup.sh'
+    - 'echo  "Success.."'
+
+
+connector:
+  timeout: 2m
+  retry: 2
+  stage: coreconnector
+  only:
+    - main
+  needs:
+    - "core"
+  script:
+    - 'cd plazmix-coreconnector'
+    - 'mvn deploy -T 2C -am -Dmaven.test.skip -s $CI_PROJECT_DIR/ci_settings.xml'
+    - 'scp -P $ARCHANGEL_PORT target/plazmix-coreconnector.jar $ARCHANGEL_USER@$ARCHANGEL_HOST:~/cloud/templates/dependency/coreconnector/plugins'
+

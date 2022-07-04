@@ -1,0 +1,10 @@
+name: ${project.name}
+main: net.plazmix.coreconnector.direction.bungee.BungeeConnectorPlugin
+version: ${project.version}
+description: ${project.description}
+website: ${project.url}
+
+author: iStonlexx
+
+depends:
+  - CloudNet-Bridge
